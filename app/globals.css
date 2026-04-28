@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #407BB5;
+  --primary-dark: #2f5d8a;
+  --bg: #F9F9F9;
+}
+
+body {
+  background-color: var(--bg);
+  color: #1a1a1a;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium;
+  }
+  .btn-outline {
+    @apply border border-primary text-primary px-4 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors font-medium;
+  }
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100;
+  }
+}
