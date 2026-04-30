@@ -1,3 +1,8 @@
+export type PriceOption = {
+  label: string;
+  price: number;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -9,9 +14,14 @@ export type Product = {
   location: string;
   description: string;
   emoji: string;
+  tipe: 0 | 1;
+  priceOptions?: PriceOption[];
 };
 
-export type CartItem = Product & { qty: number };
+export type CartItem = Product & {
+   qty: number;
+   selectedOption?: PriceOption;
+  };
 
 export const PRODUCTS: Product[] = [
   {
@@ -25,6 +35,7 @@ export const PRODUCTS: Product[] = [
     location: "Jakarta Utara",
     description: "Salmon segar impor langsung dari nelayan, cocok untuk sashimi atau dibakar.",
     emoji: "🐟",
+    tipe: 0,
   },
   {
     id: "2",
@@ -37,6 +48,7 @@ export const PRODUCTS: Product[] = [
     location: "Surabaya",
     description: "Udang windu besar segar, cocok untuk berbagai masakan.",
     emoji: "🦐",
+    tipe: 0
   },
   {
     id: "3",
@@ -49,6 +61,7 @@ export const PRODUCTS: Product[] = [
     location: "Makassar",
     description: "Cumi segar tangkapan hari ini, daging tebal dan kenyal.",
     emoji: "🦑",
+    tipe: 0
   },
   {
     id: "4",
@@ -61,6 +74,7 @@ export const PRODUCTS: Product[] = [
     location: "Jakarta Utara",
     description: "Kerapu premium, dagingnya putih dan lembut.",
     emoji: "🐠",
+    tipe: 0
   },
   {
     id: "5",
@@ -73,6 +87,7 @@ export const PRODUCTS: Product[] = [
     location: "Balikpapan",
     description: "Kepiting bakau betina bertelur, segar dari tambak.",
     emoji: "🦀",
+    tipe: 0
   },
   {
     id: "6",
@@ -85,6 +100,25 @@ export const PRODUCTS: Product[] = [
     location: "Bogor",
     description: "Lele dumbo segar dari kolam, ukuran konsumsi.",
     emoji: "🐡",
+    tipe: 0
+  },
+  {
+     id: "7",
+    name: "Ikan Koki",
+    price: 0,        // tidak dipakai, isi 0 saja
+    unit: "",        // tidak dipakai, isi "" saja
+    stock: 100,
+    category: "Ikan Air Tawar",
+    seller: "Pak Budi",
+    location: "Magetan",
+    description: "Lele segar langsung dari petani Magetan.",
+    emoji: "🐡",
+    tipe: 1,
+    priceOptions: [
+      { label: "1 ons", price: 5000 },
+      { label: "5 ons", price: 22000 },
+      { label: "1 kg", price: 40000 },
+    ],
   },
 ];
 
