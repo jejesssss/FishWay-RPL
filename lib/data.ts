@@ -1,9 +1,12 @@
-export type Product = {
+export type PriceOption = {
+  label: string;
+  price: number;
+  stock: number;
+};
+
+type BaseProduct = {
   id: string;
   name: string;
-  price: number;
-  unit: string;
-  stock: number;
   category: string;
   seller: string;
   location: string;
@@ -11,7 +14,22 @@ export type Product = {
   emoji: string;
 };
 
-export type CartItem = Product & { qty: number };
+export type Product =
+  | (BaseProduct & {
+      type: 0;
+      price: number;
+      unit: string;
+      stock: number;
+    })
+  | (BaseProduct & {
+      type: 1;
+      priceOptions: PriceOption[];
+    });
+
+export type CartItem = Product & {
+  qty: number;
+  selectedOption?: PriceOption;
+};
 
 export const PRODUCTS: Product[] = [
   {
@@ -23,8 +41,10 @@ export const PRODUCTS: Product[] = [
     category: "Ikan Laut",
     seller: "Pak Budi",
     location: "Jakarta Utara",
-    description: "Salmon segar impor langsung dari nelayan, cocok untuk sashimi atau dibakar.",
+    description:
+      "Salmon segar impor langsung dari nelayan, cocok untuk sashimi atau dibakar.",
     emoji: "🐟",
+    type: 0,
   },
   {
     id: "2",
@@ -37,6 +57,7 @@ export const PRODUCTS: Product[] = [
     location: "Surabaya",
     description: "Udang windu besar segar, cocok untuk berbagai masakan.",
     emoji: "🦐",
+    type: 0,
   },
   {
     id: "3",
@@ -49,6 +70,7 @@ export const PRODUCTS: Product[] = [
     location: "Makassar",
     description: "Cumi segar tangkapan hari ini, daging tebal dan kenyal.",
     emoji: "🦑",
+    type: 0,
   },
   {
     id: "4",
@@ -61,6 +83,7 @@ export const PRODUCTS: Product[] = [
     location: "Jakarta Utara",
     description: "Kerapu premium, dagingnya putih dan lembut.",
     emoji: "🐠",
+    type: 0,
   },
   {
     id: "5",
@@ -73,6 +96,7 @@ export const PRODUCTS: Product[] = [
     location: "Balikpapan",
     description: "Kepiting bakau betina bertelur, segar dari tambak.",
     emoji: "🦀",
+    type: 0,
   },
   {
     id: "6",
@@ -85,6 +109,22 @@ export const PRODUCTS: Product[] = [
     location: "Bogor",
     description: "Lele dumbo segar dari kolam, ukuran konsumsi.",
     emoji: "🐡",
+    type: 0,
+  },
+  {
+    id: "7",
+    name: "Ikan Koki",
+    category: "Ikan Air Tawar",
+    seller: "Pak Budi",
+    location: "Magetan",
+    description: "Lele segar langsung dari petani Magetan.",
+    emoji: "🐡",
+    type: 1,
+    priceOptions: [
+      { label: "1 ons", price: 5000, stock: 5 },
+      { label: "5 ons", price: 22000, stock: 6 },
+      { label: "1 kg", price: 40000, stock: 10 },
+    ],
   },
 ];
 
