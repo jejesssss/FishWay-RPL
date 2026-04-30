@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from 'next/image';
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -17,10 +18,21 @@ export default function Navbar() {
     <nav className="bg-[#407BB5] text-white shadow-md sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
+        {/* <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
           <span className="text-2xl">🐟</span>
           <span>Fishway</span>
+        </Link> */}
+
+        <Link href="/">
+          <Image
+            src="/images/logotemp.png"
+            alt="logo"
+            width={100}
+            height={100}
+          >
+          </Image>
         </Link>
+        
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-1">

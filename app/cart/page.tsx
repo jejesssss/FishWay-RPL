@@ -6,7 +6,7 @@ export default function CartPage() {
   const subtotal = DUMMY_CART.reduce((sum, item) => sum + item.price * item.qty, 0);
   const ongkir = 15000;
   const total = subtotal + ongkir;
-
+ 
   return (
     <Container>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">🛒 Keranjang Belanja</h1>
