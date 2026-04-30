@@ -1,6 +1,7 @@
 import Container from "@/components/Container";
 import { DUMMY_ORDERS, formatPrice } from "@/lib/data";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 const STATUS_TABS = ["Semua", "Diproses", "Dikirim", "Selesai"];
 

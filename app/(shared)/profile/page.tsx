@@ -1,6 +1,7 @@
 import Container from "@/components/Container";
 import { DUMMY_USER, DUMMY_ORDERS, formatPrice } from "@/lib/data";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 const STATUS_COLOR: Record<string, string> = {
   Diproses: "bg-yellow-100 text-yellow-700",

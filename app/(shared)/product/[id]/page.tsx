@@ -2,6 +2,7 @@ import Container from "@/components/Container";
 import { PRODUCTS, formatPrice } from "@/lib/data";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Navbar from "@/components/Navbar";
 
 const WA_NUMBER = "6281234567890"; // Ganti nomor WA penjual
 

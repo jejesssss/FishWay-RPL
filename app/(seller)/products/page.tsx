@@ -1,6 +1,7 @@
 import Container from "@/components/Container";
 import { PRODUCTS, formatPrice } from "@/lib/data";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 export default function SellerProductsPage() {
   const myProducts = PRODUCTS.filter((p) => p.seller === "Pak Budi");

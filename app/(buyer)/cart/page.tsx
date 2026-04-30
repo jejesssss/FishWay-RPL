@@ -1,21 +1,42 @@
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Container from "@/components/Container";
 import { DUMMY_CART, formatPrice } from "@/lib/data";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 export default function CartPage() {
-  const subtotal = DUMMY_CART.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const role = cookies().get("role")?.value;
+  console.log(role);
+  
+  // if (!role) {
+  //   redirect("/");
+  // }
+
+  if (role !== "seller") {
+    console.log("403/404 papa role tidak sesuai");
+  }
+
+  const subtotal = DUMMY_CART.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0,
+  );
   const ongkir = 15000;
   const total = subtotal + ongkir;
- 
+
   return (
     <Container>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">🛒 Keranjang Belanja</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        🛒 Keranjang Belanja
+      </h1>
 
       {DUMMY_CART.length === 0 ? (
         <div className="card p-12 text-center">
           <p className="text-5xl mb-4">🛒</p>
           <p className="text-gray-500 mb-4">Keranjang kamu kosong</p>
-          <Link href="/" className="btn-primary inline-block">Mulai Belanja</Link>
+          <Link href="/" className="btn-primary inline-block">
+            Mulai Belanja
+          </Link>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
@@ -29,22 +50,36 @@ export default function CartPage() {
                 </div>
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 truncate">{item.name}</p>
-                  <p className="text-sm text-gray-500">{item.seller} · {item.location}</p>
+                  <p className="font-semibold text-gray-800 truncate">
+                    {item.name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {item.seller} · {item.location}
+                  </p>
                   <p className="text-primary font-bold mt-1">
                     {formatPrice(item.price)}/{item.unit}
                   </p>
                 </div>
                 {/* Qty Control */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 text-sm">−</button>
-                  <span className="w-6 text-center font-medium">{item.qty}</span>
-                  <button className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 text-sm">+</button>
+                  <button className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 text-sm">
+                    −
+                  </button>
+                  <span className="w-6 text-center font-medium">
+                    {item.qty}
+                  </span>
+                  <button className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 text-sm">
+                    +
+                  </button>
                 </div>
                 {/* Subtotal */}
                 <div className="text-right flex-shrink-0">
-                  <p className="font-bold text-gray-800">{formatPrice(item.price * item.qty)}</p>
-                  <button className="text-red-400 hover:text-red-600 text-xs mt-1">Hapus</button>
+                  <p className="font-bold text-gray-800">
+                    {formatPrice(item.price * item.qty)}
+                  </p>
+                  <button className="text-red-400 hover:text-red-600 text-xs mt-1">
+                    Hapus
+                  </button>
                 </div>
               </div>
             ))}
@@ -53,7 +88,9 @@ export default function CartPage() {
           {/* Summary */}
           <div>
             <div className="card p-5 space-y-3 sticky top-20">
-              <h2 className="font-bold text-gray-800 text-lg">Ringkasan Pesanan</h2>
+              <h2 className="font-bold text-gray-800 text-lg">
+                Ringkasan Pesanan
+              </h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({DUMMY_CART.length} item)</span>
@@ -66,7 +103,9 @@ export default function CartPage() {
               </div>
               <div className="border-t pt-3 flex justify-between font-bold text-gray-800">
                 <span>Total</span>
-                <span className="text-primary text-lg">{formatPrice(total)}</span>
+                <span className="text-primary text-lg">
+                  {formatPrice(total)}
+                </span>
               </div>
               <Link
                 href="/checkout"
@@ -74,7 +113,10 @@ export default function CartPage() {
               >
                 Lanjut ke Checkout →
               </Link>
-              <Link href="/" className="text-sm text-center text-primary block hover:underline">
+              <Link
+                href="/"
+                className="text-sm text-center text-primary block hover:underline"
+              >
                 + Tambah Produk
               </Link>
             </div>

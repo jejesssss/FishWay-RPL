@@ -1,6 +1,7 @@
 import Container from "@/components/Container";
 import { PRODUCTS, DUMMY_ORDERS, formatPrice } from "@/lib/data";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 const sellerProducts = PRODUCTS.filter((p) => p.seller === "Pak Budi");
 const totalRevenue = DUMMY_ORDERS.reduce((s, o) => s + o.total, 0);
@@ -15,7 +16,7 @@ export default function SellerDashboardPage() {
             <h1 className="text-2xl font-bold text-gray-800">Dashboard Penjual</h1>
             <p className="text-gray-500 text-sm">Selamat datang, Pak Budi 👋</p>
           </div>
-          <Link href="/seller/products" className="btn-primary text-sm">
+          <Link href="/products" className="btn-primary text-sm">
             + Tambah Produk
           </Link>
         </div>
@@ -50,7 +51,7 @@ export default function SellerDashboardPage() {
               <span className="text-gray-300 group-hover:text-primary transition-colors text-xl">→</span>
             </div>
           </Link>
-          <Link href="/seller/orders" className="card p-6 hover:shadow-md transition-shadow group">
+          <Link href="/orders" className="card p-6 hover:shadow-md transition-shadow group">
             <div className="flex items-center gap-4">
               <div className="bg-green-100 w-14 h-14 rounded-xl flex items-center justify-center text-3xl">🛍️</div>
               <div className="flex-1">

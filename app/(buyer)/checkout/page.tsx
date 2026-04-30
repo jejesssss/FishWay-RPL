@@ -1,5 +1,6 @@
 import Container from "@/components/Container";
 import { DUMMY_CART, formatPrice } from "@/lib/data";
+import Navbar from "@/components/Navbar";
 
 const total = DUMMY_CART.reduce((s, i) => s + i.price * i.qty, 0) + 15000;
 

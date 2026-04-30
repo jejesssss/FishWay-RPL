@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter-sans" });
 
@@ -17,14 +16,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className={`${inter.variable} font-sans bg-bg min-h-screen`}>
-        <Navbar />
+      <body className={`${inter.variable} font-sans bg-bg `}>
         <main>{children}</main>
-        <footer className="mt-16 border-t border-gray-200 bg-white">
+        {/* <footer className="mt-16 border-t border-gray-200 bg-white">
           <div className="max-w-6xl mx-auto px-4 py-6 text-center text-sm text-gray-400">
             © 2026 Fishway – Platform Jual Beli Ikan Segar
           </div>
-        </footer>
+        </footer> */}
       </body>
     </html>
   );

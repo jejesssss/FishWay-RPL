@@ -16,7 +16,7 @@ export type CartItem = Product & { qty: number };
 export const PRODUCTS: Product[] = [
   {
     id: "1",
-    name: "Ikan Salmon Segar",
+    name: "Ikan bebek Segar",
     price: 85000,
     unit: "kg",
     stock: 20,

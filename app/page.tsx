@@ -1,12 +1,14 @@
 import Container from "@/components/Container";
 import ProductCard from "@/components/ProductCard";
 import { PRODUCTS } from "@/lib/data";
+import Navbar from "@/components/Navbar";
 
 const CATEGORIES = ["Semua", "Ikan Laut", "Udang", "Cumi", "Kepiting", "Ikan Air Tawar"];
 
 export default function HomePage() {
   return (
     <div>
+      <Navbar />
       {/* Hero Banner */}
       <div className="bg-gradient-to-r from-[#407BB5] to-[#2f5d8a] text-white">
         <Container>
