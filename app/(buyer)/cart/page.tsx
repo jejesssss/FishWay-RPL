@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import Container from "@/components/Container";
-import { DUMMY_CART, formatPrice } from "@/lib/data";
+import {
+  DUMMY_CART,
+  formatPrice,
+  getCartItemPrice,
+  getCartItemUnit,
+} from "@/lib/data";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
@@ -14,7 +19,7 @@ export default function CartPage() {
   }
 
   const subtotal = DUMMY_CART.reduce(
-    (sum, item) => sum + item.price * item.qty,
+    (sum, item) => sum + getCartItemPrice(item) * item.qty,
     0,
   );
   const ongkir = 15000;
@@ -55,7 +60,8 @@ export default function CartPage() {
                       {item.seller} · {item.location}
                     </p>
                     <p className="text-primary font-bold mt-1">
-                      {formatPrice(item.price)}/{item.unit}
+                      {formatPrice(getCartItemPrice(item))}/
+                      {getCartItemUnit(item)}
                     </p>
                   </div>
                   {/* Qty Control */}
@@ -73,7 +79,7 @@ export default function CartPage() {
                   {/* Subtotal */}
                   <div className="text-right flex-shrink-0">
                     <p className="font-bold text-gray-800">
-                      {formatPrice(item.price * item.qty)}
+                      {formatPrice(getCartItemPrice(item) * item.qty)}
                     </p>
                     <button className="text-red-400 hover:text-red-600 text-xs mt-1">
                       Hapus

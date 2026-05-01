@@ -1,152 +1,265 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/supabaseClient";
+
+type AccountType = "buyer" | "seller";
 
 export default function SignupPage() {
-  const [form, setForm] = useState({
-    namaLengkap: "",
-    email: "",
-    noTelepon: "",
-    password: "",
-    konfirmasiPassword: "",
-  });
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showKonfirmasi, setShowKonfirmasi] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agree, setAgree] = useState(false);
+  const [accountType, setAccountType] = useState<AccountType>("buyer");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [storeDescription, setStoreDescription] = useState("");
+  const [isProfileStep, setIsProfileStep] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const loadUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const [{ data: buyer }, { data: seller }] = await Promise.all([
+        supabase.from("buyers").select("id").eq("id", user.id).maybeSingle(),
+        supabase.from("sellers").select("id").eq("id", user.id).maybeSingle(),
+      ]);
+
+      if (buyer || seller) {
+        router.replace("/");
+        return;
+      }
+
+      setFullName(
+        user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.email?.split("@")[0] ||
+          "",
+      );
+      setIsProfileStep(true);
+    };
+
+    loadUser();
+  }, [router, supabase]);
+
   const validateEmail = (value: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
   const validatePhone = (value: string) =>
     /^(\+62|62|0)[0-9]{8,13}$/.test(value.replace(/\s/g, ""));
 
-  const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field])
-      setErrors((prev) => {
-        const n = { ...prev };
-        delete n[field];
-        return n;
-      });
-  };
+  const handleGoogleSignup = async () => {
+    setErrors({});
+    setIsLoading(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const newErrors: Record<string, string> = {};
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/signup`,
+      },
+    });
 
-    if (!form.namaLengkap.trim())
-      newErrors.namaLengkap = "Nama lengkap tidak boleh kosong";
-    if (!form.email) newErrors.email = "Email tidak boleh kosong";
-    else if (!validateEmail(form.email))
-      newErrors.email = "Format email tidak valid";
-    if (!form.noTelepon)
-      newErrors.noTelepon = "Nomor telepon tidak boleh kosong";
-    else if (!validatePhone(form.noTelepon))
-      newErrors.noTelepon = "Format nomor telepon tidak valid";
-    if (!form.password) newErrors.password = "Password tidak boleh kosong";
-    else if (form.password.length < 8)
-      newErrors.password = "Password minimal 8 karakter";
-    if (!form.konfirmasiPassword)
-      newErrors.konfirmasiPassword = "Konfirmasi password tidak boleh kosong";
-    else if (form.password !== form.konfirmasiPassword)
-      newErrors.konfirmasiPassword = "Password tidak cocok";
-    if (!agree) newErrors.agree = "Anda harus menyetujui syarat & ketentuan";
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length === 0) {
-      setIsLoading(true);
-      // TODO: Implement Supabase auth
-      // const { error } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { data: { full_name: form.namaLengkap, phone: form.noTelepon } } })
-      setTimeout(() => setIsLoading(false), 1500);
+    if (error) {
+      setErrors({ email: error.message });
+      setIsLoading(false);
     }
   };
 
-  const fields = [
-    {
-      key: "namaLengkap",
-      label: "Nama Lengkap",
-      type: "text",
-      placeholder: "Masukkan nama lengkap Anda",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "email",
-      label: "Email",
-      type: "email",
-      placeholder: "Masukkan email Anda",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "noTelepon",
-      label: "No. Telepon",
-      type: "tel",
-      placeholder: "Masukkan no. telepon Anda",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-          />
-        </svg>
-      ),
-    },
-  ];
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const lockIcon = (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
+    const nextErrors: Record<string, string> = {};
+
+    if (!email) nextErrors.email = "Email tidak boleh kosong";
+    else if (!validateEmail(email))
+      nextErrors.email = "Format email tidak valid";
+
+    if (!password) nextErrors.password = "Password tidak boleh kosong";
+    else if (password.length < 8)
+      nextErrors.password = "Password minimal 8 karakter";
+
+    if (!confirmPassword)
+      nextErrors.confirmPassword = "Konfirmasi password tidak boleh kosong";
+    else if (password !== confirmPassword)
+      nextErrors.confirmPassword = "Password tidak cocok";
+
+    if (!agree) nextErrors.agree = "Anda harus menyetujui syarat & ketentuan";
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    try {
+      setIsLoading(true);
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrors({ email: error.message });
+        return;
+      }
+
+      if (!data.session) {
+        alert("Akun berhasil dibuat. Cek email Anda untuk konfirmasi login.");
+        router.replace("/login");
+        return;
+      }
+
+      setFullName(email.split("@")[0]);
+      setIsProfileStep(true);
+    } catch (err) {
+      console.error(err);
+      setErrors({ email: "Terjadi kesalahan, coba lagi" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const nextErrors: Record<string, string> = {};
+
+    if (!fullName.trim())
+      nextErrors.fullName = "Nama lengkap tidak boleh kosong";
+    if (!phone) nextErrors.phone = "Nomor telepon tidak boleh kosong";
+    else if (!validatePhone(phone))
+      nextErrors.phone = "Format nomor telepon tidak valid";
+    if (accountType === "seller" && !storeName.trim())
+      nextErrors.storeName = "Nama toko tidak boleh kosong";
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    try {
+      setIsLoading(true);
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setErrors({ fullName: "Session login tidak ditemukan" });
+        return;
+      }
+
+      const { error: accountError } = await supabase.from("accounts").upsert(
+        {
+          id: user.id,
+          name: fullName.trim(),
+          address: null,
+        },
+        { onConflict: "id" },
+      );
+
+      if (accountError) {
+        console.error(accountError);
+        setErrors({ fullName: "Gagal menyimpan data akun" });
+        return;
+      }
+
+      if (accountType === "buyer") {
+        const { error: buyerError } = await supabase.from("buyers").upsert(
+          {
+            id: user.id,
+            phone,
+          },
+          { onConflict: "id" },
+        );
+
+        if (buyerError) {
+          console.error(buyerError);
+          setErrors({ phone: "Gagal menyimpan data pembeli" });
+          return;
+        }
+      } else {
+        const { error: sellerError } = await supabase.from("sellers").upsert(
+          {
+            id: user.id,
+          },
+          { onConflict: "id" },
+        );
+
+        if (sellerError) {
+          console.error(sellerError);
+          setErrors({ storeName: "Gagal menyimpan data penjual" });
+          return;
+        }
+
+        const { error: storeError } = await supabase.from("stores").upsert(
+          {
+            seller_id: user.id,
+            name: storeName.trim(),
+            description: storeDescription.trim() || null,
+            phone,
+          },
+          { onConflict: "seller_id" },
+        );
+
+        if (storeError) {
+          console.error(storeError);
+          setErrors({ storeName: "Gagal menyimpan data toko" });
+          return;
+        }
+      }
+
+      router.replace("/");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      setErrors({ fullName: "Terjadi kesalahan, coba lagi" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelProfile = async () => {
+    setIsLoading(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+      router.replace("/login");
+    }
+  };
+
+  const GoogleIcon = () => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24">
       <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
       />
     </svg>
   );
@@ -155,7 +268,7 @@ export default function SignupPage() {
     open ? (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-4 h-4"
+        className="h-4 w-4"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -170,7 +283,7 @@ export default function SignupPage() {
     ) : (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-4 h-4"
+        className="h-4 w-4"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -191,37 +304,34 @@ export default function SignupPage() {
     );
 
   return (
-    <div className="flex bg-[#F7FBFF] h-screen  overflow-hidden">
-
-      <div className="fixed inset-0 ">
+    <div className="flex bg-[#F7FBFF] h-screen overflow-hidden">
+      <div className="fixed inset-0 overflow-hidden">
         <svg
           className="absolute bottom-0 left-0 w-full z-0"
           viewBox="0 0 1440 320"
         >
           <path
-            d="M0.000942231 37.2993C0.000942231 37.2993 113.811 -42.2906 166.552 73.4664C219.293 189.223 310.822 105.64 400.046 118.997C489.27 132.353 510.174 197.15 613.941 172.5C730.392 144.837 741.455 276.583 861.631 198.5C962.441 133 1001.02 211.058 1101.94 198.5C1201.03 186.17 1216.93 115.986 1324.94 172.5C1432.95 229.014 1445.94 -6.95959e-05 1523.26 0C1536.06 248.051 1524.08 261.374 1523.26 420C1523.26 420 -0.00114292 865.966 6.43158e-10 394.983C0.00114292 -76.0001 0.739034 205.986 0.000766754 88L0.000942231 37.2993Z"
+            d="M0 37C0 37 114 -42 167 73C219 189 311 106 400 119C489 132 510 197 614 173C730 145 741 277 862 199C962 133 1001 211 1102 199C1201 186 1217 116 1325 173C1433 229 1446 0 1523 0V420H0V37Z"
             fill="#A2D2FF"
             fillOpacity="0.4"
           />
         </svg>
-
         <svg
           className="absolute -bottom-20 left-0 w-full z-10"
           viewBox="0 0 1440 320"
         >
           <path
-            d="M0.000175476 37.2993C0.000175476 37.2993 0.458678 36.9786 1.33097 36.4076C1.50784 23.4542 1.66758 18.8862 1.79234 36.1075C16.4791 26.6079 117.706 -33.7407 166.551 73.4664C219.293 189.223 310.822 105.64 400.046 118.997C489.269 132.353 510.173 197.15 613.941 172.5C746.545 118.997 813.15 115.182 1004.05 188.841C1097.21 224.788 1193.53 116.326 1301.55 172.841C1409.56 229.355 1445.94 -6.95959e-05 1523.26 0C1536.06 248.051 1525.37 175.214 1525.32 252.925C1489.5 297.14 338.341 292.79 2.06249 252.925C2.06281 120.752 1.95866 59.0663 1.79234 36.1075C1.62759 36.214 1.47374 36.3142 1.33097 36.4076C0.903387 67.7215 0.37568 148.039 0 88L0.000175476 37.2993Z"
+            d="M0 37C0 37 118 -34 167 73C219 189 311 106 400 119C489 132 510 197 614 173C747 119 813 115 1004 189C1097 225 1194 116 1302 173C1410 229 1446 0 1523 0V253H0V37Z"
             fill="#A2D2FF"
             fillOpacity="0.5"
           />
         </svg>
-
         <svg
           className="absolute -bottom-[180px] left-0 w-full z-20"
           viewBox="0 0 1440 320"
         >
           <path
-            d="M0.000175476 9.72022C0.000175476 9.72022 130.14 -31.7798 226.14 56.7202C322.14 145.22 442.416 53.3636 531.64 66.7202C620.863 80.0768 667.372 135.87 771.14 111.22C903.744 57.7167 885.744 48.061 1076.64 121.72C1169.8 157.667 1193.53 73.312 1301.55 129.826C1409.56 186.341 1454.83 46.7201 1532.15 46.7202C1532.15 140.001 1532.16 158.393 1532.16 160.017C1532.17 152.921 1532.17 161.242 1532.16 160.017C1532.16 163.428 1532.15 170.404 1532.15 183.72H3.20655C3.20606 145.826 0.738267 230.206 0 112.22L0.000175476 9.72022Z"
+            d="M0 10C0 10 130 -32 226 57C322 145 442 53 532 67C621 80 667 136 771 111C904 58 886 48 1077 122C1170 158 1194 73 1302 130C1410 186 1455 47 1532 47V184H3L0 10Z"
             fill="#689DD1"
           />
         </svg>
@@ -242,9 +352,8 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 min-h-screen flex items-center justify-center px-6 py-[100px]  z-30 overflow-y-auto">
-        <div className="aw-full bg-white rounded-3xl shadow-[0_1px_3px_rgba(0,0,0,0.25)] h-[800px] py-10 px-16 max-w-[480px] ">
+      <div className="flex-1 min-h-screen flex items-center justify-center px-6 z-30">
+        <div className="w-full bg-white rounded-3xl shadow-[0_1px_3px_rgba(0,0,0,0.25)] my-auto py-10 px-16 max-w-[480px] max-h-[740px] overflow-y-auto">
           <div className="flex justify-center mb-2">
             <Image
               src="/images/logo2_blue.png"
@@ -255,204 +364,338 @@ export default function SignupPage() {
           </div>
 
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Buat Akun</h2>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {isProfileStep ? "Lengkapi Profil" : "Buat Akun"}
+            </h2>
             <p className="text-gray-400 text-sm mt-1">
-              Daftar untuk mulai berbelanja
+              {isProfileStep
+                ? "Pilih jenis akun dan isi data yang dibutuhkan"
+                : "Buat akun dulu, lalu lengkapi profil Anda"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
-            {/* Text fields */}
-            {fields.map((f) => (
-              <div key={f.key}>
+          {isProfileStep ? (
+            <form
+              onSubmit={handleProfileSubmit}
+              noValidate
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAccountType("buyer")}
+                  className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    accountType === "buyer"
+                      ? "border-[#568EC5] bg-[#568EC5] text-white"
+                      : "border-gray-200 bg-gray-50 text-gray-700 hover:border-[#568EC5]"
+                  }`}
+                >
+                  Pembeli
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountType("seller")}
+                  className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    accountType === "seller"
+                      ? "border-[#568EC5] bg-[#568EC5] text-white"
+                      : "border-gray-200 bg-gray-50 text-gray-700 hover:border-[#568EC5]"
+                  }`}
+                >
+                  Penjual
+                </button>
+              </div>
+
+              <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  {f.label}
+                  Nama Lengkap
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                    {f.icon}
-                  </span>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Masukkan nama lengkap Anda"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${
+                    errors.fullName
+                      ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
+                      : "border-gray-200 bg-gray-50 focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
+                  }`}
+                />
+                {errors.fullName && (
+                  <p className="text-red-500 text-xs mt-1.5">
+                    {errors.fullName}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  {accountType === "seller" ? "Telepon Toko" : "No. Telepon"}
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Masukkan nomor telepon"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${
+                    errors.phone
+                      ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
+                      : "border-gray-200 bg-gray-50 focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
+                  }`}
+                />
+                {errors.phone && (
+                  <p className="text-red-500 text-xs mt-1.5">{errors.phone}</p>
+                )}
+              </div>
+
+              {accountType === "seller" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Nama Toko
+                    </label>
+                    <input
+                      type="text"
+                      value={storeName}
+                      onChange={(e) => setStoreName(e.target.value)}
+                      placeholder="Masukkan nama toko"
+                      className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${
+                        errors.storeName
+                          ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
+                          : "border-gray-200 bg-gray-50 focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
+                      }`}
+                    />
+                    {errors.storeName && (
+                      <p className="text-red-500 text-xs mt-1.5">
+                        {errors.storeName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Deskripsi Toko
+                    </label>
+                    <textarea
+                      value={storeDescription}
+                      onChange={(e) => setStoreDescription(e.target.value)}
+                      placeholder="Tambahkan deskripsi toko (opsional)"
+                      rows={4}
+                      className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition-all focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="grid gap-3">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-xl bg-[#568EC5] text-white font-semibold text-sm transition-all duration-200 hover:bg-[#4578b0] active:scale-[0.98] disabled:opacity-70"
+                >
+                  {isLoading ? "Menyimpan..." : "Simpan dan lanjut"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelProfile}
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-sm transition-all duration-200 hover:border-[#568EC5] hover:text-[#568EC5] disabled:opacity-70"
+                >
+                  Batalkan registrasi
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <form
+                onSubmit={handleSignupSubmit}
+                noValidate
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Email
+                  </label>
                   <input
-                    type={f.type}
-                    value={form[f.key as keyof typeof form]}
-                    onChange={(e) => handleChange(f.key, e.target.value)}
-                    placeholder={f.placeholder}
-                    className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none transition-all ${
-                      errors[f.key]
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email)
+                        setErrors((prev) => ({ ...prev, email: "" }));
+                    }}
+                    placeholder="Masukkan email Anda"
+                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${
+                      errors.email
                         ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
                         : "border-gray-200 bg-gray-50 focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
                     }`}
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1.5">
+                      {errors.email}
+                    </p>
+                  )}
                 </div>
-                {errors[f.key] && (
-                  <p className="text-red-500 text-xs mt-1.5">{errors[f.key]}</p>
-                )}
-              </div>
-            ))}
 
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                  {lockIcon}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (errors.password)
+                          setErrors((prev) => ({ ...prev, password: "" }));
+                      }}
+                      placeholder="Buat password"
+                      className={`w-full rounded-xl border px-4 py-3 pr-11 text-sm outline-none transition-all ${
+                        errors.password
+                          ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
+                          : "border-gray-200 bg-gray-50 focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-[#568EC5]"
+                      aria-label={
+                        showPassword
+                          ? "Sembunyikan password"
+                          : "Tampilkan password"
+                      }
+                    >
+                      <EyeIcon open={showPassword} />
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-red-500 text-xs mt-1.5">
+                      {errors.password}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Konfirmasi Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (errors.confirmPassword)
+                          setErrors((prev) => ({
+                            ...prev,
+                            confirmPassword: "",
+                          }));
+                      }}
+                      placeholder="Konfirmasi password Anda"
+                      className={`w-full rounded-xl border px-4 py-3 pr-11 text-sm outline-none transition-all ${
+                        errors.confirmPassword
+                          ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
+                          : "border-gray-200 bg-gray-50 focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((value) => !value)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-[#568EC5]"
+                      aria-label={
+                        showConfirmPassword
+                          ? "Sembunyikan konfirmasi password"
+                          : "Tampilkan konfirmasi password"
+                      }
+                    >
+                      <EyeIcon open={showConfirmPassword} />
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1.5">
+                      {errors.confirmPassword}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={agree}
+                      onChange={(e) => {
+                        setAgree(e.target.checked);
+                        if (errors.agree)
+                          setErrors((prev) => ({ ...prev, agree: "" }));
+                      }}
+                      className="mt-0.5 w-4 h-4 rounded accent-[#568EC5]"
+                    />
+                    <span className="text-sm text-gray-600">
+                      Saya setuju dengan{" "}
+                      <Link
+                        href="/syarat-ketentuan"
+                        className="text-[#568EC5] font-medium hover:underline"
+                      >
+                        Syarat & Ketentuan
+                      </Link>{" "}
+                      dan{" "}
+                      <Link
+                        href="/kebijakan-privasi"
+                        className="text-[#568EC5] font-medium hover:underline"
+                      >
+                        Kebijakan Privasi
+                      </Link>
+                    </span>
+                  </label>
+                  {errors.agree && (
+                    <p className="text-red-500 text-xs mt-1.5 ml-6">
+                      {errors.agree}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-xl bg-[#568EC5] text-white font-semibold text-sm transition-all duration-200 hover:bg-[#4578b0] active:scale-[0.98] disabled:opacity-70"
+                >
+                  {isLoading ? "Memproses..." : "Buat akun"}
+                </button>
+              </form>
+
+              <div className="flex items-center gap-3 my-6">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400">
+                  atau daftar dengan
                 </span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => handleChange("password", e.target.value)}
-                  placeholder="Buat password"
-                  className={`w-full pl-10 pr-11 py-3 rounded-xl border text-sm outline-none transition-all ${
-                    errors.password
-                      ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
-                      : "border-gray-200 bg-gray-50 focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
-                  }`}
-                />
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              <div className="flex gap-3 justify-center">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#568EC5] transition-colors"
+                  onClick={handleGoogleSignup}
+                  disabled={isLoading}
+                  className="flex items-center justify-center w-16 h-12 rounded-xl border border-gray-200 hover:border-[#568EC5] hover:bg-blue-50 transition-all duration-150 disabled:opacity-70"
+                  aria-label="Google"
                 >
-                  <EyeIcon open={showPassword} />
+                  <GoogleIcon />
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1.5">{errors.password}</p>
-              )}
-            </div>
 
-            {/* Konfirmasi Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Konfirmasi Password
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                  {lockIcon}
-                </span>
-                <input
-                  type={showKonfirmasi ? "text" : "password"}
-                  value={form.konfirmasiPassword}
-                  onChange={(e) =>
-                    handleChange("konfirmasiPassword", e.target.value)
-                  }
-                  placeholder="Konfirmasi password Anda"
-                  className={`w-full pl-10 pr-11 py-3 rounded-xl border text-sm outline-none transition-all ${
-                    errors.konfirmasiPassword
-                      ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
-                      : "border-gray-200 bg-gray-50 focus:border-[#568EC5] focus:ring-2 focus:ring-blue-100 focus:bg-white"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKonfirmasi(!showKonfirmasi)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#568EC5] transition-colors"
+              <p className="text-center text-sm text-gray-500 mt-5">
+                Sudah punya akun?{" "}
+                <Link
+                  href="/login"
+                  className="font-semibold text-[#568EC5] hover:underline"
                 >
-                  <EyeIcon open={showKonfirmasi} />
-                </button>
-              </div>
-              {errors.konfirmasiPassword && (
-                <p className="text-red-500 text-xs mt-1.5">
-                  {errors.konfirmasiPassword}
-                </p>
-              )}
-            </div>
-
-            {/* Agree checkbox */}
-            <div>
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={agree}
-                  onChange={(e) => {
-                    setAgree(e.target.checked);
-                    if (errors.agree)
-                      setErrors((prev) => {
-                        const n = { ...prev };
-                        delete n.agree;
-                        return n;
-                      });
-                  }}
-                  className="mt-0.5 w-4 h-4 rounded accent-[#568EC5]"
-                />
-                <span className="text-sm text-gray-600">
-                  Saya setuju dengan{" "}
-                  <Link
-                    href="/syarat-ketentuan"
-                    className="text-[#568EC5] font-medium hover:underline"
-                  >
-                    Syarat & Ketentuan
-                  </Link>{" "}
-                  dan{" "}
-                  <Link
-                    href="/kebijakan-privasi"
-                    className="text-[#568EC5] font-medium hover:underline"
-                  >
-                    Kebijakan Privasi
-                  </Link>
-                </span>
-              </label>
-              {errors.agree && (
-                <p className="text-red-500 text-xs mt-1.5 ml-6">
-                  {errors.agree}
-                </p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-70 mt-2"
-              style={{ background: isLoading ? "#7aaed4" : "#568EC5" }}
-              onMouseEnter={(e) =>
-                !isLoading &&
-                ((e.target as HTMLButtonElement).style.background = "#4578b0")
-              }
-              onMouseLeave={(e) =>
-                !isLoading &&
-                ((e.target as HTMLButtonElement).style.background = "#568EC5")
-              }
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg
-                    className="animate-spin w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8H4z"
-                    />
-                  </svg>
-                  Memproses...
-                </span>
-              ) : (
-                "Daftar"
-              )}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-gray-500 mt-5">
-            Sudah punya akun?{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-[#568EC5] hover:underline"
-            >
-              Masuk sekarang
-            </Link>
-          </p>
+                  Masuk sekarang
+                </Link>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -3,6 +3,9 @@ import ProductCard from "@/components/ProductCard";
 import { PRODUCTS } from "@/lib/data";
 import Navbar from "@/components/Navbar";
 
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
+
 const CATEGORIES = [
   "Semua",
   "Ikan Laut",
@@ -12,14 +15,27 @@ const CATEGORIES = [
   "Ikan Air Tawar",
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = createClient(cookies());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: account } = user
+    ? await supabase
+        .from("accounts")
+        .select("name")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null };
+  const displayName = account?.name || user?.email || "Pengguna";
+
   return (
     <div>
       <Navbar />
       <Container>
         {/* Category Filter */}
         <h1 className="text-4xl font-bold my-8">
-          Selamat Datang di Fishway, Prengky 👋
+          Selamat Datang di Fishway, {displayName}
         </h1>
         {/* Section Title */}
         <div className="flex items-center px-4 justify-between mb-4">

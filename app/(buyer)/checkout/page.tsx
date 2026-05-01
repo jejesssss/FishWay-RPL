@@ -1,8 +1,11 @@
 import Container from "@/components/Container";
-import { DUMMY_CART, formatPrice } from "@/lib/data";
+import { DUMMY_CART, formatPrice, getCartItemPrice } from "@/lib/data";
 import Navbar from "@/components/Navbar";
 
-const subtotal = DUMMY_CART.reduce((s, i) => s + i.price * i.qty, 0);
+const subtotal = DUMMY_CART.reduce(
+  (sum, item) => sum + getCartItemPrice(item) * item.qty,
+  0,
+);
 
 const shipping = 15000;
 
@@ -78,7 +81,7 @@ export default function CheckoutPage() {
                       {item.name} x{item.qty}
                     </span>
                     <span className="font-medium">
-                      {formatPrice(item.price * item.qty)}
+                      {formatPrice(getCartItemPrice(item) * item.qty)}
                     </span>
                   </div>
                 ))}

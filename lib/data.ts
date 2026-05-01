@@ -133,6 +133,18 @@ export const DUMMY_CART: CartItem[] = [
   { ...PRODUCTS[1], qty: 1 },
 ];
 
+export function getCartItemPrice(item: CartItem) {
+  return item.type === 0
+    ? item.price
+    : item.selectedOption?.price || item.priceOptions[0]?.price || 0;
+}
+
+export function getCartItemUnit(item: CartItem) {
+  return item.type === 0
+    ? item.unit
+    : item.selectedOption?.label || item.priceOptions[0]?.label || "varian";
+}
+
 export const DUMMY_USER = {
   name: "Andi Pratama",
   email: "andi@email.com",
